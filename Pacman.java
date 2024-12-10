@@ -12,10 +12,10 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
 
     // we have created sets like data types to store that where and...
     // what are going to be the properties of the objects that we are going to store on board.
-    ArrayList<Block> walls;
-    HashSet<Block> foods;
-    ArrayList<Block> ghosts;
-    Block pacman; // bcz pacman has only one block or tile.
+    ArrayList<Tile> walls;
+    HashSet<Tile> foods;
+    ArrayList<Tile> ghosts;
+    Tile pacman; // bcz pacman has only one Tile or tile.
     public Clip clip;
     private boolean Collided = false;
     private boolean gameOver = false;
@@ -63,22 +63,22 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
     private Image pacmanLeft;
     private Image pacmanRight;
 
-//    function for removing eaten food
+    //    function for removing eaten food
     public void foodEaten() {
-        ArrayList<Block> eatenF = new ArrayList<>();
-        for (Block food:foods) {
+        ArrayList<Tile> eatenF = new ArrayList<>();
+        for (Tile food:foods) {
             if(hasCollided(pacman,food)) {
                 eatenF.add(food);
                 score++;
             }
         }
-        for(Block tobeRemoved:eatenF) {
+        for(Tile tobeRemoved:eatenF) {
             foods.remove(tobeRemoved);
         }
         updateScoreLabel();
     }
 
-//    to update the score and lives
+    //    to update the score and lives
     private void updateScoreLabel() {
         scoreLabel.setText("Score: " + score + " | Lives: " + lives);
     }
@@ -86,7 +86,7 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
     private void updateState() {
         gameWinOrLose.setText(Win? "Game Won":inCaseofNotWon);
     }
-//    to change the image direction of pacman
+    //    to change the image direction of pacman
     public void directionChange() {
         if (direction.equals("u")) {
             pacman.image = pacmanUp;
@@ -103,24 +103,24 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
     }
 
 
-//    function for collision with ghost
+    //    function for collision with ghost
     public void GhostCollision() {
-        for(Block ghost:ghosts) {
-            if(hasCollided(pacman,ghost)) {
-                Collided = true;
-                lives-=1;
-                resetPosition();
-                gameLoop.stop();
-                Timer pauseTimer = new Timer(2000, e -> {
-                    gameLoop.start();
-                }); // Restart the loop after delay
-                pauseTimer.setRepeats(false);// Only execute once
-                pauseTimer.start();
-                updateScoreLabel();
-                break;
+        if(HasGhostCollided(pacmanWalker,GhostWalker)) {
+            Collided = true;
+            if(lives!=0) {
+                lives -= 1;
             }
+            resetPosition();
+            gameLoop.stop();
+            Timer pauseTimer = new Timer(2000, e -> {
+                gameLoop.start();
+            }); // Restart the loop after delay
+            pauseTimer.setRepeats(false);// Only execute once
+            pauseTimer.start();
+            updateScoreLabel();
         }
     }
+
     //To Check if All the food is Eaten
     public void CheckAllEaten(){
         if(foods.size()==0){
@@ -133,14 +133,14 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
     }
 
     public void resetPosition(){
-            pacman.x = pacman.startX;
-            pacman.y = pacman.startY;
+        pacman.x = pacman.startX;
+        pacman.y = pacman.startY;
 
-            for (int i = 0; i < ghosts.size(); i++) {
-                Block ghost = ghosts.get(i);
-                ghost.x = ghost.startX;
-                ghost.y = ghost.startY;
-            }
+//        for (int i = 0; i < ghosts.size(); i++) {
+//            Tile ghost = ghosts.get(i);
+//            ghost.x = ghost.startX;
+//            ghost.y = ghost.startY;
+//        }
 
 
     }
@@ -167,14 +167,13 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
     }
 
 
-    // making a constructor
+    // making a constructor of the pacman class.
 
     public Pacman(Clip newClip) {
         setPreferredSize(new Dimension(boardWidth,boardHeight));
         setBackground(Color.BLACK);
         this.clip = newClip;
-
-        pacmanWalker = new DirectedWalker();
+//     we are creating an array type object here to initialise the reference of ghostWalker.
         GhostWalker = new RandomWalker[4];
 
         addKeyListener(this);
@@ -183,26 +182,27 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
         walls = new ArrayList<>();
         foods = new HashSet<>();
         ghosts = new ArrayList<>();
+
         // load images.
         wallImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("./wall.png"))).getImage();
         blueGhost = new ImageIcon(Objects.requireNonNull(getClass().getResource("./blueGhost.png"))).getImage();
         redGhost = new ImageIcon(Objects.requireNonNull(getClass().getResource("./redGhost.png"))).getImage();
         pinkGhost = new ImageIcon(Objects.requireNonNull(getClass().getResource("./pinkGhost.png"))).getImage();
         orangeGhost = new ImageIcon(Objects.requireNonNull(getClass().getResource("./orangeGhost.png"))).getImage();
-
-
         pacmanDown = new ImageIcon(Objects.requireNonNull(getClass().getResource("./pacmanDown.png"))).getImage();
         pacmanUp = new ImageIcon(Objects.requireNonNull(getClass().getResource("./pacmanUp.png"))).getImage();
         pacmanLeft = new ImageIcon(Objects.requireNonNull(getClass().getResource("./pacmanLeft.png"))).getImage();
         pacmanRight = new ImageIcon(Objects.requireNonNull(getClass().getResource("./pacmanRight.png"))).getImage();
-        gameLoop = new Timer(200,this);
-        gameLoop.start();
 
+//      it means after the delay of every 170 milliseconds, the actionPerformed function is called.
+        gameLoop = new Timer(170,this);
+        gameLoop.start();
         createMaze();
 //        we are creating label here
         scoreLabel = new JLabel("Score:"+ score +" | Lives: " + lives);
         scoreLabel.setFont(new Font("Arial", Font.BOLD, 20));
         scoreLabel.setForeground(Color.BLACK);
+
 
 //        we are creating win or lose label here
         gameWinOrLose = new JLabel(Win? "Game Won":inCaseofNotWon);
@@ -210,8 +210,6 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
         gameWinOrLose.setForeground(Color.black);
 //Dealing with The logic of the music here
 
-
-// we have made changes here
 
         int rowcount = 21;
         int colunmcount = 19;
@@ -248,42 +246,41 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
                 int x = c*tilesize;
                 int y = r*tilesize;
                 if(tileChar == 'X'){ // it means it has to be replaced with wall
-                    Block wall = new Block(wallImage,x,y,tilesize,tilesize);
+                    Tile wall = new Tile(wallImage,x,y,tilesize,tilesize);
                     walls.add(wall);
                 }
                 else if (tileChar=='b') { // adding blue ghost
-                    Block ghost = new Block(blueGhost,x,y,tilesize,tilesize);
+                    Tile ghost = new Tile(blueGhost,x,y,tilesize,tilesize);
                     ghosts.add(ghost);
                     GhostWalker[ghostIndex] = new RandomWalker(x,y);
                     ghostIndex++;
                 }
                 else if (tileChar=='p') { //adding pink ghost image
-                    Block ghost = new Block(pinkGhost,x,y,tilesize,tilesize);
+                    Tile ghost = new Tile(pinkGhost,x,y,tilesize,tilesize);
                     ghosts.add(ghost);
                     GhostWalker[ghostIndex] = new RandomWalker(x,y);
                     ghostIndex++;
                 }
                 else if (tileChar=='r') { //adding red ghost
-                    Block ghost = new Block(redGhost,x,y,tilesize,tilesize);
+                    Tile ghost = new Tile(redGhost,x,y,tilesize,tilesize);
                     ghosts.add(ghost);
                     GhostWalker[ghostIndex] = new RandomWalker(x,y);
                     ghostIndex++;
                 }
                 else if (tileChar=='o') { //adding orange ghost
-                    Block ghost = new Block(orangeGhost,x,y,tilesize,tilesize);
+                    Tile ghost = new Tile(orangeGhost,x,y,tilesize,tilesize);
                     ghosts.add(ghost);
                     GhostWalker[ghostIndex] = new RandomWalker(x,y);
                     ghostIndex++;
                 }
                 else if (tileChar=='P') {
-                    pacman = new Block(pacmanLeft,x,y,tilesize,tilesize);
+                    pacman = new Tile(pacmanLeft,x,y,tilesize,tilesize);
                     pacmanWalker = new DirectedWalker(x,y);
                 }
                 else if (tileChar==' ') {
-                    Block food = new Block(null,x+14,y+14,4,4);
+                    Tile food = new Tile(null,x+14,y+14,4,4);
                     foods.add(food);
                 }
-
             }
         }
     }
@@ -294,26 +291,46 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
     public void draw(Graphics g) {
 //        we are drawing the pacman here.
         g.drawImage(pacman.image,pacman.x, pacman.y,pacman.width, pacman.height,null);
-        for(Block ghost:ghosts) {
+        for(Tile ghost:ghosts) {
             g.drawImage(ghost.image,ghost.x,ghost.y,ghost.width,ghost.height,null);
         }
-        for (Block wall:walls) {
+        for (Tile wall:walls) {
             g.drawImage(wall.image,wall.x, wall.y, wall.width, wall.height, null);
         }
-        g.setColor(Color.gray);
-        for (Block food:foods) {
+        g.setColor(Color.GRAY);
+        for (Tile food:foods) {
             g.fillRect(food.x, food.y, food.width, food.height);
         }
     }
-    public boolean hasCollided(Block a,Block b) {
-        if(a.x<(b.x+b.width) && a.y<(b.y+b.height) && (a.x+a.width)>b.x && (a.y+a.height)>b.y) {
+    public boolean hasCollided(Tile a,Tile b) {
+//      we have subtracted 14 because the food was placed in the middle of the tile.
+        if(a.x==b.x-14 && a.y==b.y-14) {
             return true;
         }
         return false;
     }
 
+    public boolean HasGhostCollided(DirectedWalker pac,RandomWalker[] ghosted) {
+        int pacPrevX = pac.getPreviousX();  // we have created methods to get previous position of the directed walker.
+        int pacPrevY = pac.getPreviousY();
+
+        for (RandomWalker ghost : ghosted) {
+            int ghostPrevX = ghost.getPreviousX();
+            int ghostPrevY = ghost.getPreviousY();
+
+            // Check if positions have swapped
+            if ((pac.getDirectedX() == ghost.getRandomX() && pac.getDirectedY() == ghost.getRandomY()) ||
+                    (pacPrevX == ghost.getRandomX() && pacPrevY == ghost.getRandomY() &&
+                            pac.getDirectedX() == ghostPrevX && pac.getDirectedY() == ghostPrevY)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void actionPerformed(ActionEvent e) {
-        // Update ghost positions with RandomWalker
+        // we are Updating ghost positions with RandomWalker
+//        this is for when the game is lost and pacman has lost all his lives.
         if(lives<1){
             gameOver = true;
             inCaseofNotWon="Game Over";
@@ -323,21 +340,23 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
         }
         for (int i = 0; i < GhostWalker.length; i++) {
             if(GhostWalker[i] != null) {
-                Block ghost = ghosts.get(i);
+                Tile ghost = ghosts.get(i);
                 point2 newPosition = GhostWalker[i].walk(walls);
                 ghost.x = newPosition.getX();
                 ghost.y = newPosition.getY();
-
-
+// this is the linking point of the tile type objects and......
+// the Random Walker objects in the Ghost Walker Array.
             }
         }
         //Pacman and Directed Walker Logic in the key released section
         if (!direction.isEmpty()) {
             point2 newPoint  = pacmanWalker.walkto(direction,walls);
-            if(Collided==false){
+//            this collided represents the collision of ghost and pacman.
+            if(!Collided){
                 pacman.x = newPoint.getX();
                 pacman.y = newPoint.getY();
-            } else if(Collided==true) {
+            }
+            else if(Collided==true) {
                 pacman.x = pacman.startX;
                 pacman.y = pacman.startY;
                 newPoint.SetX(pacman.startX);
@@ -349,11 +368,10 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
         foodEaten();
         CheckAllEaten();
         GhostCollision();
-
         // Repaint to see the next new positions
+//        it visually shows the next updated positions when the action performed is called.
         repaint();
     }
-
 
     public static void main(String[] args) throws UnsupportedAudioFileException, IOException,Exception{
 
@@ -363,5 +381,6 @@ public class Pacman extends JPanel implements ActionListener, KeyListener {
         clip.open(audioStream);
         clip.start();
         new Pacman(clip);
+//        making an anonymous object because name assign ki need nhi h it just has to start the game
     }
 }
